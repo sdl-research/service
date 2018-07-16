@@ -160,6 +160,7 @@ ConditionFileIsExecutable={{.Path|cmdEscape}}
 [Service]
 StartLimitInterval=5
 StartLimitBurst=10
+LimitNOFILE=infinity
 ExecStart={{.Path|cmdEscape}}{{range .Arguments}} {{.|cmd}}{{end}}
 {{if .ChRoot}}RootDirectory={{.ChRoot|cmd}}{{end}}
 {{if .WorkingDirectory}}WorkingDirectory={{.WorkingDirectory|cmdEscape}}{{end}}
