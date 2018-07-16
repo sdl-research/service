@@ -101,6 +101,9 @@ type Config struct {
 	WorkingDirectory string // Initial working directory.
 	ChRoot           string
 
+	// Optional field to set LimitNOFILE for systemd
+	LimitNOFILE string // String type to handle "infinity" value
+	
 	// System specific options.
 	//  * OS X
 	//    - KeepAlive     bool (true)
