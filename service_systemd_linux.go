@@ -138,11 +138,9 @@ func (s *systemd) Uninstall() error {
 		return err
 	}
 
-	if s.Config.WithSocket {
-		sp := s.socketPath()
-		if err := os.Remove(sp); err != nil {
-			return err
-		}
+	sp := s.socketPath()
+	if err := os.Remove(sp); err != nil {
+		return err
 	}
 	return nil
 }
