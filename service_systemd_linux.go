@@ -126,6 +126,19 @@ func (s *systemd) Install() error {
 }
 
 func (s *systemd) Uninstall() error {
+	// stop socket before service as socket will attempt to restart service
+	sp := s.socketPath()
+	_, err := os.Stat(sp)
+	if err == nil {
+		err := run("systemctl", "stop", s.Name+".socket")
+		if err != nil {
+			return err
+		}
+		if err := os.Remove(sp); err != nil {
+			return err
+		}
+	}
+
 	err := run("systemctl", "disable", s.Name+".service")
 	if err != nil {
 		return err
@@ -138,10 +151,6 @@ func (s *systemd) Uninstall() error {
 		return err
 	}
 
-	sp := s.socketPath()
-	if err := os.Remove(sp); err != nil {
-		return err
-	}
 	return nil
 }
 
