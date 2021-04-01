@@ -103,7 +103,7 @@ type Config struct {
 
 	// Optional field to set LimitNOFILE for systemd
 	LimitNOFILE string // String type to handle "infinity" value
-	
+
 	// System specific options.
 	//  * OS X
 	//    - KeepAlive     bool (true)
@@ -115,6 +115,10 @@ type Config struct {
 	//    - ReloadSignal string () [USR1, ...] - Signal to send on reaload.
 	//    - PIDFile     string () [/run/prog.pid] - Location of the PID file.
 	Option KeyValue
+
+	WithSocket        bool   // Create socket file.
+	SocketDescription string // Long description of socket.
+	SocketPort        int    // Socket ListenStream port.
 }
 
 var (

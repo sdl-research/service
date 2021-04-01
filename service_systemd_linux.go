@@ -52,8 +52,13 @@ func (s *systemd) configPath() (cp string, err error) {
 	cp = "/etc/systemd/system/" + s.Config.Name + ".service"
 	return
 }
-func (s *systemd) template() *template.Template {
-	return template.Must(template.New("").Funcs(tf).Parse(systemdScript))
+
+func (s *systemd) socketPath() (sp string) {
+	return "/etc/systemd/system/" + s.Config.Name + ".socket"
+}
+
+func (s *systemd) template(systemdType string) *template.Template {
+	return template.Must(template.New("").Funcs(tf).Parse(systemdType))
 }
 
 func (s *systemd) Install() error {
@@ -89,7 +94,7 @@ func (s *systemd) Install() error {
 		s.Option.string(optionPIDFile, ""),
 	}
 
-	err = s.template().Execute(f, to)
+	err = s.template(systemdScript).Execute(f, to)
 	if err != nil {
 		return err
 	}
@@ -98,6 +103,25 @@ func (s *systemd) Install() error {
 	if err != nil {
 		return err
 	}
+
+	if s.Config.WithSocket {
+		socketFilePath := s.socketPath()
+		_, err = os.Stat(socketFilePath)
+		if err == nil {
+			return fmt.Errorf("Socket already exists: %s", socketFilePath)
+		}
+		fSocket, err := os.Create(socketFilePath)
+		if err != nil {
+			return err
+		}
+		defer fSocket.Close()
+
+		err = s.template(systemdSocket).Execute(fSocket, to)
+		if err != nil {
+			return err
+		}
+	}
+
 	return run("systemctl", "daemon-reload")
 }
 
@@ -112,6 +136,13 @@ func (s *systemd) Uninstall() error {
 	}
 	if err := os.Remove(cp); err != nil {
 		return err
+	}
+
+	if s.Config.WithSocket {
+		sp := s.socketPath()
+		if err := os.Remove(sp); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -156,11 +187,16 @@ func (s *systemd) Restart() error {
 const systemdScript = `[Unit]
 Description={{.Description}}
 ConditionFileIsExecutable={{.Path|cmdEscape}}
+## Uncomment for socket-based activation
+#Requires={{.Name}}.socket
 
 [Service]
+## Uncomment for socket-based activation
+#NonBlocking=true
+
 StartLimitInterval=5
 StartLimitBurst=10
-LimitNOFILE=infinity
+LimitNOFILE={{.LimitNOFILE}}
 ExecStart={{.Path|cmdEscape}}{{range .Arguments}} {{.|cmd}}{{end}}
 {{if .ChRoot}}RootDirectory={{.ChRoot|cmd}}{{end}}
 {{if .WorkingDirectory}}WorkingDirectory={{.WorkingDirectory|cmdEscape}}{{end}}
@@ -173,4 +209,12 @@ EnvironmentFile=-/etc/sysconfig/{{.Name}}
 
 [Install]
 WantedBy=multi-user.target
+`
+
+const systemdSocket = `[Unit]
+Description={{.SocketDescription}}
+
+[Socket]
+ListenStream={{.SocketPort}}
+NoDelay=true
 `
