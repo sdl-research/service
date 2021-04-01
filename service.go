@@ -102,7 +102,10 @@ type Config struct {
 	ChRoot           string
 
 	// Optional field to set LimitNOFILE for systemd
-	LimitNOFILE string // String type to handle "infinity" value
+	LimitNOFILE string
+
+	// Optional field to set UMask
+	UMask string
 
 	// System specific options.
 	//  * OS X
@@ -116,6 +119,7 @@ type Config struct {
 	//    - PIDFile     string () [/run/prog.pid] - Location of the PID file.
 	Option KeyValue
 
+	// Optional field to generate a socket file
 	WithSocket        bool   // Create socket file.
 	SocketDescription string // Long description of socket.
 	SocketPort        int    // Socket ListenStream port.
