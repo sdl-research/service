@@ -126,11 +126,10 @@ func (s *systemd) Install() error {
 }
 
 func (s *systemd) Uninstall() error {
-	// stop socket before service as socket will attempt to restart service
 	sp := s.socketPath()
 	_, err := os.Stat(sp)
 	if err == nil {
-		err := run("systemctl", "stop", s.Name+".socket")
+		err = run("systemctl", "disable", s.Name+".socket")
 		if err != nil {
 			return err
 		}
@@ -139,7 +138,7 @@ func (s *systemd) Uninstall() error {
 		}
 	}
 
-	err := run("systemctl", "disable", s.Name+".service")
+	err = run("systemctl", "disable", s.Name+".service")
 	if err != nil {
 		return err
 	}
@@ -221,6 +220,8 @@ WantedBy=multi-user.target
 
 const systemdSocket = `[Unit]
 Description={{.SocketDescription}}
+
+{{if .SocketPartOf}}PartOf={{.SocketPartOf}}{{end}}
 
 [Socket]
 ListenStream={{.SocketPort}}
