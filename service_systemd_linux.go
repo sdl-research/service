@@ -126,7 +126,19 @@ func (s *systemd) Install() error {
 }
 
 func (s *systemd) Uninstall() error {
-	err := run("systemctl", "disable", s.Name+".service")
+	sp := s.socketPath()
+	_, err := os.Stat(sp)
+	if err == nil {
+		err = run("systemctl", "disable", s.Name+".socket")
+		if err != nil {
+			return err
+		}
+		if err := os.Remove(sp); err != nil {
+			return err
+		}
+	}
+
+	err = run("systemctl", "disable", s.Name+".service")
 	if err != nil {
 		return err
 	}
@@ -138,12 +150,6 @@ func (s *systemd) Uninstall() error {
 		return err
 	}
 
-	if s.Config.WithSocket {
-		sp := s.socketPath()
-		if err := os.Remove(sp); err != nil {
-			return err
-		}
-	}
 	return nil
 }
 
@@ -187,12 +193,10 @@ func (s *systemd) Restart() error {
 const systemdScript = `[Unit]
 Description={{.Description}}
 ConditionFileIsExecutable={{.Path|cmdEscape}}
-## Uncomment for socket-based activation
-#Requires={{.Name}}.socket
+{{if .WithSocket}}Requires={{.Name}}.socket{{end}}
 
 [Service]
-## Uncomment for socket-based activation
-#NonBlocking=true
+{{if .WithSocket}}NonBlocking=true{{end}}
 
 StartLimitInterval=5
 StartLimitBurst=10
@@ -214,6 +218,8 @@ WantedBy=multi-user.target
 
 const systemdSocket = `[Unit]
 Description={{.SocketDescription}}
+
+{{if .SocketPartOf}}PartOf={{.SocketPartOf}}{{end}}
 
 [Socket]
 ListenStream={{.SocketPort}}
