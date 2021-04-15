@@ -193,12 +193,10 @@ func (s *systemd) Restart() error {
 const systemdScript = `[Unit]
 Description={{.Description}}
 ConditionFileIsExecutable={{.Path|cmdEscape}}
-## Uncomment for socket-based activation
-#Requires={{.Name}}.socket
+{{if .WithSocket}}Requires={{.Name}}.socket{{end}}
 
 [Service]
-## Uncomment for socket-based activation
-#NonBlocking=true
+{{if .WithSocket}}NonBlocking=true{{end}}
 
 StartLimitInterval=5
 StartLimitBurst=10
