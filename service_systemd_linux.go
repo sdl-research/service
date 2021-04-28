@@ -222,6 +222,6 @@ Description={{.SocketDescription}}
 {{if .SocketPartOf}}PartOf={{.SocketPartOf}}{{end}}
 
 [Socket]
-ListenStream={{.SocketPort}}
+ListenStream={{.SocketListenStream}}
 NoDelay=true
 `

@@ -120,10 +120,10 @@ type Config struct {
 	Option KeyValue
 
 	// Optional field to generate a socket file
-	WithSocket        bool   // Create socket file.
-	SocketDescription string // Long description of socket.
-	SocketPort        int    // Socket ListenStream port.
-	SocketPartOf      string // Socket PartOf to stop socket when main service is manually stopped; value is service name (Name.service)
+	WithSocket         bool   // Create socket file.
+	SocketDescription  string // Long description of socket.
+	SocketListenStream string // Socket ListenStream.
+	SocketPartOf       string // Socket PartOf to stop socket when main service is manually stopped; value is service name (Name.service)
 }
 
 var (
